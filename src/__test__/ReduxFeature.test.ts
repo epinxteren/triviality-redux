@@ -1,19 +1,30 @@
 import triviality, { Feature, OptionalRegistries } from 'triviality';
 import {
+  Action,
   AnyAction,
   Dispatch,
   Middleware, MiddlewareAPI,
   ReducersMapObject,
 } from 'redux';
 import { ReduxFeature } from '../ReduxFeature';
+import { ActionsObservable, StateObservable } from 'redux-observable';
+import { filter, mapTo, tap } from 'rxjs/operators';
 
-it('Can add reducers and middle from other features', async () => {
+it('Can add reducers, middleware and epics from other features', async (done) => {
   const spyMiddleware = jest.fn();
 
   const TestMiddleware: Middleware<{}> = (_store: MiddlewareAPI<any>) => (next: Dispatch<AnyAction>) => (action: AnyAction) => {
     spyMiddleware(action.type);
     return next(action);
   };
+
+  function preferenceEpic(action$: ActionsObservable<Action>, _store: StateObservable<string>) {
+    return action$.pipe(
+      filter((action: Action) => action.type === 'leaving'),
+      mapTo({ type: 'bye!!' }),
+      tap(() => done()),
+    );
+  }
 
   function testReducer(
     state: string = 'hi',
@@ -37,6 +48,11 @@ it('Can add reducers and middle from other features', async () => {
         },
         middleware: (): Middleware[] => {
           return [TestMiddleware];
+        },
+        epics: () => {
+          return [
+            preferenceEpic,
+          ];
         },
       };
     }

@@ -1,6 +1,7 @@
 import { Feature } from 'triviality';
-import { applyMiddleware, combineReducers, createStore, Middleware, ReducersMapObject, Store } from 'redux';
+import { AnyAction, applyMiddleware, combineReducers, createStore, Middleware, ReducersMapObject, Store } from 'redux';
 import { composeWithDevTools, RemoteReduxDevToolsOptions } from 'remote-redux-devtools';
+import { combineEpics, createEpicMiddleware, Epic } from 'redux-observable';
 
 export class ReduxFeature implements Feature {
 
@@ -10,9 +11,18 @@ export class ReduxFeature implements Feature {
         return {};
       },
       middleware: (): Middleware[] => {
+        return [this.epicMiddleware()];
+      },
+      epics: (): Epic[] => {
         return [];
       },
     };
+  }
+
+  public setup() {
+    // Create store first for epicMiddleware.
+    this.store();
+    this.epicMiddleware().run(this.rootEpic());
   }
 
   public devToolsOptions(): RemoteReduxDevToolsOptions {
@@ -28,6 +38,15 @@ export class ReduxFeature implements Feature {
       reducer,
       composeEnhancers(enhancer),
     );
+  }
+  public rootEpic() {
+    return combineEpics(
+      ...this.registries().epics(),
+    );
+  }
+
+  public epicMiddleware() {
+    return createEpicMiddleware<AnyAction, AnyAction, any, any>();
   }
 
 }
