@@ -1,7 +1,7 @@
 {
   "name": "triviality-redux",
   "private": false,
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "Redux triviality integration",
   "main": "build",
   "types": "build",
@@ -58,10 +58,9 @@
     "typescript": "^3.2"
   },
   "dependencies": {
-    "@types/remote-redux-devtools": "^0",
     "redux": "^4",
+    "redux-devtools-extension": "^2.13.8",
     "redux-observable": "^1",
-    "remote-redux-devtools": "^0",
     "rxjs": "^6",
     "triviality": "^0"
   }

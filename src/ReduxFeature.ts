@@ -1,6 +1,6 @@
 import { Feature } from 'triviality';
 import { AnyAction, applyMiddleware, combineReducers, createStore, Middleware, ReducersMapObject, Store } from 'redux';
-import { composeWithDevTools, RemoteReduxDevToolsOptions } from 'remote-redux-devtools';
+import { composeWithDevTools, EnhancerOptions } from 'redux-devtools-extension';
 import { combineEpics, createEpicMiddleware, Epic } from 'redux-observable';
 
 export class ReduxFeature implements Feature {
@@ -25,7 +25,7 @@ export class ReduxFeature implements Feature {
     this.epicMiddleware().run(this.rootEpic());
   }
 
-  public devToolsOptions(): RemoteReduxDevToolsOptions {
+  public devToolsOptions(): EnhancerOptions {
     return {};
   }
 
