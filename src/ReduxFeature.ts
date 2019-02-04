@@ -1,20 +1,32 @@
-import { Feature } from 'triviality';
-import { AnyAction, applyMiddleware, combineReducers, createStore, Middleware, ReducersMapObject, Store } from 'redux';
+import { Feature, Optional } from 'triviality';
+import {
+  Action,
+  applyMiddleware,
+  combineReducers,
+  createStore, Dispatch,
+  Middleware,
+  ReducersMapObject,
+  Store,
+  StoreEnhancer,
+} from 'redux';
 import { composeWithDevTools, EnhancerOptions } from 'redux-devtools-extension';
-import { combineEpics, createEpicMiddleware, Epic } from 'redux-observable';
+import { combineEpics, createEpicMiddleware, Epic, EpicMiddleware } from 'redux-observable';
 
-export class ReduxFeature implements Feature {
+export class ReduxFeature<S = {}, A extends Action<any> = Action<any>> implements Feature {
 
   public registries() {
     return {
-      reducers: (): ReducersMapObject<any, any> => {
+      reducers: (): Optional<ReducersMapObject<S, A>> => {
         return {};
       },
-      middleware: (): Middleware[] => {
+      middleware: (): Array<Middleware<{}, Dispatch<A>>> => {
         return [this.epicMiddleware()];
       },
-      epics: (): Epic[] => {
+      epics: (): Array<Epic<A, A, S>> => {
         return [];
+      },
+      enhancers: (): StoreEnhancer[] => {
+        return [this.middlewareEnhancer()];
       },
     };
   }
@@ -32,21 +44,25 @@ export class ReduxFeature implements Feature {
   public store(): Store<any> {
     const composeEnhancers = composeWithDevTools(this.devToolsOptions());
     const registries = this.registries();
-    const enhancer = applyMiddleware(...registries.middleware());
-    const reducer = combineReducers(registries.reducers());
     return createStore(
-      reducer,
-      composeEnhancers(enhancer),
+      combineReducers<S>(registries.reducers() as any),
+      composeEnhancers(...registries.enhancers()),
     );
   }
+
+  public middlewareEnhancer() {
+    const registries = this.registries();
+    return applyMiddleware(...registries.middleware());
+  }
+
   public rootEpic() {
     return combineEpics(
       ...this.registries().epics(),
     );
   }
 
-  public epicMiddleware() {
-    return createEpicMiddleware<AnyAction, AnyAction, any, any>();
+  public epicMiddleware(): EpicMiddleware<A, A, S, Dispatch<A>> {
+    return createEpicMiddleware<A, A, S, Dispatch<A>>();
   }
 
 }

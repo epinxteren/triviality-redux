@@ -18,7 +18,7 @@ it('Can add reducers, middleware and epics from other features', async (done) =>
     return next(action);
   };
 
-  function preferenceEpic(action$: ActionsObservable<Action>, _store: StateObservable<string>) {
+  function preferenceEpic(action$: ActionsObservable<Action>, _store: StateObservable<{ test: string }>) {
     return action$.pipe(
       filter((action: Action) => action.type === 'leaving'),
       mapTo({ type: 'bye!!' }),
@@ -28,7 +28,7 @@ it('Can add reducers, middleware and epics from other features', async (done) =>
 
   function testReducer(
     state: string = 'hi',
-    action: AnyAction,
+    action: Action<any>,
   ): string {
 
     switch (action.type) {
@@ -41,9 +41,9 @@ it('Can add reducers, middleware and epics from other features', async (done) =>
 
   class MyFeature implements Feature {
 
-    public registries(): OptionalRegistries<ReduxFeature> {
+    public registries(): OptionalRegistries<ReduxFeature<{ test: string }>> {
       return {
-        reducers: (): ReducersMapObject<any, any> => {
+        reducers: (): ReducersMapObject<{ test: string }, Action<any>> => {
           return { test: testReducer };
         },
         middleware: (): Middleware[] => {
@@ -58,8 +58,12 @@ it('Can add reducers, middleware and epics from other features', async (done) =>
     }
   }
 
+  class MyReduxFeature extends ReduxFeature<{ test: string }> {
+
+  }
+
   const container = await triviality()
-    .add(ReduxFeature)
+    .add(MyReduxFeature)
     .add(MyFeature)
     .build();
 
